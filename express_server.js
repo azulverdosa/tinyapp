@@ -6,11 +6,17 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "9sm5xK": "http://www.google.com",
+  "jh9h2k": "https://elkevogelsang.com/#&gid=1&pid=3"
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.send("Hello! Welcome to TinyApp :)");
+});
+
+app.get("/urls", (reu, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
 });
 
 app.get("/urls.json", (req, res) => {
