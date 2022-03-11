@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <style> 
+    input[type = button] {
+      background-color: hwb(20 96% 2%);
+      border: 2px solid black;
+      border-radius: 4px;
+      color: #070101;
+      padding: 6px 18px;
+      text-decoration: none;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+    </style>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -17,6 +29,7 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Delete</th>
         </tr>
       </thead>
       <tbody>
@@ -24,6 +37,7 @@
           <tr>
             <td><%= key %></td>
             <td><%= value %></td>
+            <td><form method="POST" action="/urls/<%= key %>/delete"><input type="button" value="Delete"></form></td>
           </tr>
         <% }) %>
       </tbody>
