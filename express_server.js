@@ -1,10 +1,13 @@
 const express = require("express");
+const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser')
+
 const app = express();
 const PORT = 8080; // default port 8080
-const bodyParser = require("body-parser");
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
 
 function generateRandomString() {
   return Math.random().toString(36).slice(2,8);
@@ -18,6 +21,12 @@ const urlDatabase = {
 
 app.get("/", (req, res) => {
   res.send("Hello! Welcome to TinyApp :)");
+});
+
+app.post("/login", (req, res) => {
+  
+  res.cookie("username", req.body.username);
+  res.redirect('/urls');
 });
 
 app.get("/urls", (req, res) => {
