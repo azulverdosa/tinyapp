@@ -19,8 +19,36 @@ const urlDatabase = {
   "jh9h2k": "https://www.thisiscolossal.com/2014/03/absurdly-expressive-dog-portraits-by-elke-vogelsang/"
 };
 
+const userDatabase = {
+    "randomUserId": {
+      id: "randomUserId", 
+      email: "user@example.com", 
+      password: "1234"
+    },
+  }
+
 app.get("/", (req, res) => {
   res.send("Hello! Welcome to TinyApp :)");
+});
+
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"], 
+  };
+
+  res.render('register', templateVars);
+});
+
+app.post("/register", (req, res) => {
+  const userId = generateRandomString();
+  userDatabase[userId] = {
+    "id": userId,
+    "email": req.body.email,
+    "password": req.body.password,
+  }
+
+  res.cookie("user_id", userId);
+  res.redirect('/urls');
 });
 
 app.post("/login", (req, res) => {
@@ -48,6 +76,7 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   
+  console.log(urlDatabase[shortURL]);
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -104,5 +133,5 @@ app.get("/hello", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Tiny app listening on port ${PORT} 👂!`);
 });
