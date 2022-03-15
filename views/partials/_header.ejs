@@ -1,4 +1,26 @@
 <header>
+  <style> 
+    .buttons {
+      background-color: hwb(20 96% 2%);
+      border: 2px solid rgb(105, 104, 104);
+      border-radius: 4px;
+      color: rgb(0, 0, 0);
+      padding: 6px 18px;
+      text-decoration: none;
+      margin: 4px 2px;
+      cursor: pointer;
+    }
+
+    .loginButton {
+      border: 2px solid rgb(0, 0, 0);
+    }
+
+    .registerButton {
+      border: 2px solid rgb(0, 0, 0);
+    }
+  </style>
+
+  <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous"> -->
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
     <a class="navbar-brand" href="/urls">TinyApp</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,9 +39,10 @@
             </form>
         <% } else { %>
             <form method="POST" action="/login">
-              <label for="username">Login - User Name:</label>
-              <input id="username" name="username" placeholder="username">
-              <button>Submit</button>
+              <button class="buttons loginButton">Login</button>
+            </form>
+            <form method="POST" action="/register">
+              <button class="buttons registerButton">Register</button>
             </form>
         <% } %>
       </div>
