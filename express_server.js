@@ -53,30 +53,42 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if(emailExists(req.body.email)) {
-    return res.status(400).send('Email already exists');
-  }
 
-  const userId = generateRandomString();
+  return res.redirect('/register');
+});
+
+// app.post("/register", (req, res) => {
+//   if(emailExists(req.body.email)) {
+//     return res.status(400).send('Email already exists');
+//   }
+
+//   const userId = generateRandomString();
   
-  userDatabase[userId] = {
-    "id": userId,
-    "email": req.body.email,
-    "password": req.body.password,
-  }
+//   userDatabase[userId] = {
+//     "id": userId,
+//     "email": req.body.email,
+//     "password": req.body.password,
+//   }
 
-  if (userDatabase[userId].email === '') {
+//   if (userDatabase[userId].email === '') {
     
-    return res.status(400).send('Email cannot be blank');
-  } else if(userDatabase[userId].password === '') {
+//     return res.status(400).send('Email cannot be blank');
+//   } else if(userDatabase[userId].password === '') {
     
-    return res.status(400).send('Password cannot be blank');
-  }
+//     return res.status(400).send('Password cannot be blank');
+//   }
 
+//   res.cookie("user_id", userId);
+//   return res.redirect('/register');
+// });
 
+app.get('/login', (req, res) => {
+  const user = undefined;
+  const templateVars = {
+    user,
+  };
 
-  res.cookie("user_id", userId);
-  return res.redirect('/urls');
+  return res.render('login', templateVars);
 });
 
 app.post("/login", (req, res) => {
@@ -107,7 +119,7 @@ app.post("/login", (req, res) => {
   // }
 
   // res.cookie("user_id", userId);
-  return res.redirect('/urls');
+  return res.redirect('/login');
 });
 
 app.post("/logout", (req, res) => {
