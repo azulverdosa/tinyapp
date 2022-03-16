@@ -59,7 +59,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send('Email already exists');
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = bcrypt.hashSync(givenPassword, 10);
   const userId = generateRandomString();
   
   userDatabase[userId] = {
