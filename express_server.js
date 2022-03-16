@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -48,24 +49,23 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if(findUserByEmail(req.body.email)) {
+  const {email: givenEmail = '', password: givenPassword = ''} = req.body;
+
+  if (givenEmail === '' || givenPassword === '') {
+    return res.status(400).send('Feilds cannot be blank');
+  }
+
+  if(findUserByEmail(givenEmail)) {
     return res.status(400).send('Email already exists');
   }
 
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const userId = generateRandomString();
   
   userDatabase[userId] = {
     "id": userId,
-    "email": req.body.email,
-    "password": req.body.password,
-  }
-
-  if (userDatabase[userId].email === '') {
-    
-    return res.status(400).send('Email cannot be blank');
-  } else if(userDatabase[userId].password === '') {
-    
-    return res.status(400).send('Password cannot be blank');
+    "email": givenEmail,
+    "password": hashedPassword,
   }
 
   res.cookie("user_id", userId);
@@ -73,33 +73,49 @@ app.post("/register", (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const user = undefined;
   const templateVars = {
-    user,
+    user: undefined,
   };
 
   return res.render('login', templateVars);
 });
 
 app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-  const user = findUserByEmail(req.body.email);
+  const {email: givenEmail = '', password: givenPassword = ''} = req.body;
 
-  if (!email || !password) {
-      
+  if (givenEmail === '' || givenPassword === '') {
     return res.status(400).send('Email and/or password cannot be blank');
-    } else if(!user) {
-
-    return res.status(403).send('User cannot be found');
-    } else if(user.password !== req.body.password) {
-
-      return res.status(403).send('Password is incorrect');
-    }  
+  } 
   
-    res.cookie('user_id', user.id);
-    return res.redirect('/urls');
+  const user = findUserByEmail(givenEmail);
+  
+  if (!user) {
+    return res.status(403).send('User cannot be found');
+  } 
+  
+  if (!bcrypt.compareSync(givenPassword, user.password)) {
+    return res.status(403).send('Password is incorrect');
+  }  
+  
+  res.cookie('user_id', user.id);
+  return res.redirect('/urls');
 
+  // if (givenEmail && givenPassword) {
+  //   const user = findUserByEmail(givenEmail);
+
+  //   if (user) {
+  //     if (bcrypt.compareSync(givenPassword, user.password)) {
+  //       res.cookie('user_id', user.id);
+  //       return res.redirect('/urls');
+  //     }
+
+  //     return res.status(403).send('The email and password combination is incorrect');
+  //   }
+
+  //   return res.status(403).send('User cannot be found');
+  // }
+
+  // return res.status(400).send('Email and/or password cannot be blank');
 });
 
 app.post("/logout", (req, res) => {
