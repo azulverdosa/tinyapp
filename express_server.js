@@ -21,16 +21,11 @@ const userDatabase = {
     email: "user@example.com", 
     password: "1234"
   },
-  "123": {
-    id: "123", 
-    email: "user@email.com", 
-    password: "1234"
-  },
 };
 
 const generateRandomString = () => Math.random().toString(36).slice(2,8);
 const findUserById = (userId) => userDatabase[userId] || null;
-const emailExists = (email) => Object.values(userDatabase).some(user => user?.email === email);
+const findUserByEmail = (email) => Object.values(userDatabase).find(user => user?.email === email);
 
 // app.method(url, handler) === 'endpoint' | 'route'
 app.get("/", (req, res) => {
@@ -53,34 +48,29 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
+  if(findUserByEmail(req.body.email)) {
+    return res.status(400).send('Email already exists');
+  }
 
-  return res.redirect('/register');
-});
-
-// app.post("/register", (req, res) => {
-//   if(emailExists(req.body.email)) {
-//     return res.status(400).send('Email already exists');
-//   }
-
-//   const userId = generateRandomString();
+  const userId = generateRandomString();
   
-//   userDatabase[userId] = {
-//     "id": userId,
-//     "email": req.body.email,
-//     "password": req.body.password,
-//   }
+  userDatabase[userId] = {
+    "id": userId,
+    "email": req.body.email,
+    "password": req.body.password,
+  }
 
-//   if (userDatabase[userId].email === '') {
+  if (userDatabase[userId].email === '') {
     
-//     return res.status(400).send('Email cannot be blank');
-//   } else if(userDatabase[userId].password === '') {
+    return res.status(400).send('Email cannot be blank');
+  } else if(userDatabase[userId].password === '') {
     
-//     return res.status(400).send('Password cannot be blank');
-//   }
+    return res.status(400).send('Password cannot be blank');
+  }
 
-//   res.cookie("user_id", userId);
-//   return res.redirect('/register');
-// });
+  res.cookie("user_id", userId);
+  return res.redirect('/urls');
+});
 
 app.get('/login', (req, res) => {
   const user = undefined;
@@ -92,39 +82,29 @@ app.get('/login', (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // const email = req.body.email;
-  // const password = req.body.password;
+  const email = req.body.email;
+  const password = req.body.password;
+  const user = findUserByEmail(req.body.email);
 
-  // if (!email || !password) {
-  //   return res.status(400).send('Email and password cannot be blank');
-  // }
+  if (!email || !password) {
+      
+    return res.status(400).send('Email and/or password cannot be blank');
+    } else if(!user) {
 
-  // const user = findUserById(user_id);
+    return res.status(403).send('User cannot be found');
+    } else if(user.password !== req.body.password) {
 
-  // if(!user) {
-  //   return res.status(400).send('A user with that email does not exist');
-  // }
+      return res.status(403).send('Password is incorrect');
+    }  
+  
+    res.cookie('user_id', user.id);
+    return res.redirect('/urls');
 
-  // if(user.password !== password) {
-  //   return res.status(400).send('Password does not match');
-  // }
-
-  // res.cookie('user_id', userDatabase.id);
-  // res.redirect('/urls');
-
-  // userDatabase[userId] = {
-  //   "id": userId,
-  //   "email": req.body.email,
-  //   "password": req.body.password,
-  // }
-
-  // res.cookie("user_id", userId);
-  return res.redirect('/login');
 });
 
 app.post("/logout", (req, res) => {
   
-  res.clearCookie("user_id");
+  res.clearCookie('user_id');
   return res.redirect('/urls');
 });
 
