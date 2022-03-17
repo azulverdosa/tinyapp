@@ -3,7 +3,7 @@
 <head>
   <!-- Bootstrap CSS -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <title>URL - TinyApp Example</title>
+  <title>Your Tiny URL</title>
 </head>
 
 <body>
@@ -11,17 +11,19 @@
   <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
-        <h5 class="card-title">Long URL: <%= longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
+        <h5 class="card-title">Long URL: <%= longUrl %></h5>
+        <p class="card-text">Short URL: <a href="/u/<%= shortUrl %>"><%= shortUrl %></a></p>
       </div>
-    <div class="card-footer text-muted">
-      <h5 class="card-title">Edit</h5>
-      <form method="POST" action="/urls/<%= shortURL %>">
-        <label for="longURL">New Long URL for <%= shortURL %>:</label>
-        <input id="longURL" name="longURL" placeholder="http://...">
-        <button>Submit</button>
-      </form>
-    </div>
+    <% if (user?.email) { %>
+      <div class="card-footer text-muted">
+          <h5 class="card-title">Edit</h5>
+          <form method="POST" action="/urls/<%= shortUrl %>">
+            <label for="longUrl">New Long URL for <%= shortUrl %>:</label>
+            <input id="longUrl" name="longUrl" placeholder="http://...">
+            <button>Submit</button>
+          </form>
+      </div>
+    <% } %>
   </div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
