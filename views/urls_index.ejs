@@ -38,17 +38,19 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">User ID</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
       </thead>
       <tbody>
-        <% Object.entries(urls).forEach(([key, value]) => { %>
+        <% Object.entries(urls).forEach(([key, { longUrl, userId }]) => { %>
           <tr>
             <td><%= key %></td>
-            <td><%= value %></td>
+            <td><%= longUrl %></td>
+            <td><%= userId %></td>
             <td>
-              <form method="POST" action="/urls/<%= key %>/edit">
+              <form method="GET" action="/urls/<%= key %>/edit">
                 <button class="button editButton">
                   Edit
                 </button>
