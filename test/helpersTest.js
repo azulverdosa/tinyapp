@@ -1,7 +1,7 @@
 const {describe, it} = require('mocha');
 const { assert, expect } = require('chai');
 
-const { getUserByEmail } = require('../helpers.js');
+const { findUserByEmail } = require('../helpers.js');
 
 const testUsers = {
   "userRandomID": {
@@ -16,18 +16,17 @@ const testUsers = {
   }
 };
 
-describe('getUserByEmail', function() {
+describe('findUserByEmail', function() {
   it('should return a user with valid email', function() {
-    const user = getUserByEmail("user@example.com", testUsers)
+    const user = findUserByEmail("user@example.com", testUsers);
     const expectedUserID = "userRandomID";
 
     assert.deepEqual(user?.id, expectedUserID);
   });
 
   it('should return undefined if user does not exist', function() {
-    const user = getUserByEmail("user@example.com", testUsers)
-    const expectedUserID = "userRandomID";
+    const user = findUserByEmail("unknownuser@example.com", testUsers);
 
-    assert.notDeepEqual(user?.id, expectedUserID);
+    assert.isUndefined(user);
   })
 });
