@@ -1,14 +1,18 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
+const { findUserByEmail } = require('./helpers');
 
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 8080; 
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2', 'key3'],
+}));
 
 const urlDatabase = {
   b6UTxQ: {
@@ -19,7 +23,7 @@ const urlDatabase = {
     longUrl: "https://www.thisiscolossal.com/2014/03/absurdly-expressive-dog-portraits-by-elke-vogelsang/",
     userId: "abcdef"
   }
-}; // object.entries >>> [[b6UTxQ, {longUrl: lhl, userId: aJ48lW}], ...]
+}; 
 
 const userDatabase = {  
   "aJ48lW": {
@@ -31,7 +35,6 @@ const userDatabase = {
 
 const generateRandomString = () => Math.random().toString(36).slice(2,8);
 const findUserById = (userId) => userDatabase[userId] || null;
-const findUserByEmail = (email) => Object.values(userDatabase).find(user => user?.email === email);
 const findUrlsForUserId = (userId) => {
   const arrOfUrlEntries = Object.entries(urlDatabase); 
 
@@ -44,15 +47,13 @@ const findUrlsForUserId = (userId) => {
   }, {});
 };
 
-// app.method(url, handler) === 'endpoint' | 'route'
 app.get("/", (req, res) => {
   return res.send("Hello! Welcome to TinyApp :)");
 });
 
 app.get("/register", (req, res) => {
-  const user = findUserById(req.cookies.user_id);
+  const user = findUserById(req.session.userId);
   
-  // logged in users needn't register
   if (user) {
     return res.redirect('/urls');
   }
@@ -68,10 +69,12 @@ app.post("/register", (req, res) => {
   const {email: givenEmail = '', password: givenPassword = ''} = req.body;
 
   if (givenEmail === '' || givenPassword === '') {
-    return res.status(400).send('Oops, did you forget something? Feilds cannot be blank');
+    return res.status(400).send('Oops, did you forget something? Fields cannot be blank');
   }
 
-  if(findUserByEmail(givenEmail)) {
+  console.log('register user', givenEmail, givenPassword);
+
+  if(findUserByEmail(givenEmail, userDatabase)) {
     return res.status(400).send('Hmm, looks like you\'ve done this before, the email already exists');
   }
 
@@ -84,7 +87,7 @@ app.post("/register", (req, res) => {
     "password": hashedPassword,
   }
 
-  res.cookie("user_id", userId);
+  req.session.userId = userId;
   return res.redirect('/urls');
 });
 
@@ -100,47 +103,36 @@ app.post("/login", (req, res) => {
   const {email: givenEmail = '', password: givenPassword = ''} = req.body;
 
   if (givenEmail === '' || givenPassword === '') {
-    return res.status(400).send('Oops, did you forget something? Feilds cannot be blank');
-  } 
+    return res.status(400).send('Oops, did you forget something? Fields cannot be blank');
+  }
   
-  const user = findUserByEmail(givenEmail);
+  const user = findUserByEmail(givenEmail, userDatabase);
+
+  console.log('login user', user, givenEmail, givenPassword);
   
   if (!user) {
+    console.log('login user failed', user);
     return res.status(403).send('Hmm, are you sure you did that right? User cannot be found');
   } 
   
+  console.log('check password');
   if (!bcrypt.compareSync(givenPassword, user.password)) {
-    return res.status(403).send('OOps, did you forget something? Password is incorrect');
+    return res.status(403).send('Oops, did you forget something? Something is incorrect');
   }  
   
-  res.cookie('user_id', user.id);
+  req.session.userId = user.id;
   return res.redirect('/urls');
-
-  // if (givenEmail && givenPassword) {
-  //   const user = findUserByEmail(givenEmail);
-
-  //   if (user) {
-  //     if (bcrypt.compareSync(givenPassword, user.password)) {
-  //       res.cookie('user_id', user.id);
-  //       return res.redirect('/urls');
-  //     }
-
-  //     return res.status(403).send('The email and password combination is incorrect');
-  //   }
-
-  //   return res.status(403).send('User cannot be found');
-  // }
-
-  // return res.status(400).send('Email and/or password cannot be blank');
 });
 
 app.get("/logout", (req, res) => {  
-  res.clearCookie('user_id');
+  req.session = null;
   return res.redirect('/tinyapp');
 });
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.userId;
+
+  console.log('bleep', userId)
   const user = findUserById(userId);
   
   if (user) {
@@ -153,11 +145,10 @@ app.get("/urls", (req, res) => {
   }
   
   return res.status(403).send('You need to login first, silly.');
-  // return res.status(302).redirect('/tinyapp');
 });
 
 app.post("/urls", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.userId;
   const user = findUserById(userId);
 
   if (!user) {
@@ -171,11 +162,11 @@ app.post("/urls", (req, res) => {
     userId
   };
 
-  return res.redirect('/urls');
+  return res.redirect(`/urls/${shortUrl}`);
 });
 
 app.get("/urls/new", (req, res) => {
-  const user = findUserById(req.cookies.user_id);
+  const user = findUserById(req.session.userId);
 
   if (!user) {
     return res.status(403).send('You need to login first, silly.');
@@ -189,11 +180,20 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortUrl/edit", (req, res) => {
-  const { shortUrl } = req.params;
-  const userId = req.cookies.user_id;
+  const userId = req.session.userId;
   const user = findUserById(userId);
   
   if (user) {
+    const { shortUrl } = req.params;
+    const urlObj = urlDatabase[shortUrl];
+
+    if (urlObj) {
+      if (urlObj.userId === userId) {
+        return res.redirect(`/urls/${shortUrl}`);
+      }
+
+      return res.status(403).send('Not yours, no touchy.');
+    }
     return res.redirect(`/urls/${shortUrl}`);
   } 
 
@@ -201,7 +201,7 @@ app.get("/urls/:shortUrl/edit", (req, res) => {
 });
 
 app.post("/urls/:shortUrl/delete", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.userId;
   const user = findUserById(userId);
 
   if (user) {
@@ -225,28 +225,36 @@ app.post("/urls/:shortUrl/delete", (req, res) => {
 });
 
 app.get("/urls/:shortUrl", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.userId;
   const user = findUserById(userId);
 
   const { shortUrl } = req.params;
   const urlObj = urlDatabase[shortUrl];
 
-  if (urlObj){
-      const templateVars = { 
-        shortUrl, 
-        longUrl: urlObj.longUrl,
-        user,
-      };
+  if (!user) {
+    return res.status(403).send('You need to login first, silly.');
+  } 
 
-      return res.render("urls_show", templateVars);
-    
+  if (!urlObj){
+    return res.status(404).send('Hmmm.... can\'t seem to find that one');
   }
+
+  if (urlObj.userId !== userId) {
+    return res.status(403).send('Not yours, no touchy.');
+  }
+
+  const templateVars = { 
+    shortUrl, 
+    longUrl: urlObj.longUrl,
+    user,
+  };
+
+  return res.render("urls_show", templateVars);
   
-  return res.status(404).send('Hmmm.... can\'t seem to find that one');
 });
 
 app.post("/urls/:shortUrl", (req, res) => {
-  const userId = req.cookies.user_id;
+  const userId = req.session.userId;
   const user = findUserById(userId);
 
   if (user) {
@@ -257,7 +265,7 @@ app.post("/urls/:shortUrl", (req, res) => {
       if (urlObj.userId === userId) {
         urlObj.longUrl = req.body.longUrl;
       
-        return res.redirect(`/urls/${shortUrl}`);
+        return res.redirect('/urls');
       }
 
       return res.status(403).send('Not yours, no touchy.');
@@ -278,7 +286,7 @@ app.get("/u/:shortUrl", (req, res) => {
     return res.redirect(longUrl);
   }
 
-  res.status(404).send('Could not find shortUrl in database');
+  res.status(404).send('Hmmm.... can\'t seem to find that one');
 });
 
 app.get("/urls.json", (req, res) => {
@@ -286,9 +294,13 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/tinyapp", (req, res) => {
-  const user = findUserById(req.cookies.user_id);
+  const userId = req.session.userId;
+  const user = findUserById(userId);
+  console.log('what the user?', userId, user, typeof user)
 
-  if (user) {
+  if (user !== null && typeof user === 'object' && Object.keys(user).length > 0) {
+    console.log('kicking in', user);
+
     return res.redirect("/urls");
   } 
 
