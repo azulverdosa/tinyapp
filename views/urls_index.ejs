@@ -13,12 +13,31 @@
       cursor: pointer;
     }
 
+    .table {
+      table-layout: fixed;
+    }
+
+    .fixer {
+      width: 45%;
+    }
+
+    .longUrlTD {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .deleteButton {
       border: 2px solid rgb(240, 44, 44);
     }
 
     .editButton {
       border: 2px solid rgb(26, 156, 243);
+    }
+
+    .newButton {
+      border: 2px solid rgb(25, 221, 41);
+      text-decoration: none;
     }
 
     </style>
@@ -36,28 +55,29 @@
     <table class="table">
       <thead>
         <tr>
+          <th class="fixer" scope="col">Long URL</th>
           <th scope="col">Short URL</th>
-          <th scope="col">Long URL</th>
-          <th scope="col">User ID</th>
+          <th scope="col">Created</th>
           <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
       </thead>
       <tbody>
-        <% Object.entries(urls).forEach(([key, { longUrl, userId }]) => { %>
+        <% Object.entries(urls).forEach(([shortUrl, { createdAt, longUrl, userId }]) => { %>
           <tr>
-            <td><%= key %></td>
-            <td><%= longUrl %></td>
-            <td><%= userId %></td>
+            <td class="longUrlTD"><%= longUrl %></td>
+            <td><a href="/u/<%= shortUrl %>" target="_blank" rel="noopener noreferrer"><%= shortUrl %></a></td>
             <td>
-              <form method="GET" action="/urls/<%= key %>/edit">
+              <%= new Date(createdAt).toLocaleDateString(locale, dateFormatOptions) %></td>
+            <td>
+              <form method="GET" action="/urls/<%= shortUrl %>/edit">
                 <button class="button editButton">
                   Edit
                 </button>
               </form>
             </td>
             <td>
-              <form method="POST" action="/urls/<%= key %>/delete">
+              <form method="POST" action="/urls/<%= shortUrl %>/delete">
                 <button class="button deleteButton">
                   Delete
                 </button>
@@ -67,6 +87,11 @@
         <% }) %>
       </tbody>
     </table>
+    <form method="GET" action="/urls/new">
+      <button class="button newButton">
+        Create New
+      </button>
+    </form>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
